@@ -1,0 +1,10 @@
+﻿venv/
+.gradle/
+cache/
+Backer*/
+*.keystore
+*.lock
+android/
+.dart_tool/
+backup_*/
+*.zip
