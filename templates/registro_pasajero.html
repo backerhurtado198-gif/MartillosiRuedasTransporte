@@ -1,0 +1,41 @@
+﻿<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Registro de Pasajero - Martillos & Ruedas</title>
+</head>
+<body style="background:#121212; color:#fff; font-family:sans-serif; margin:0; padding:20px; display:flex; justify-content:center; align-items:center; min-height:100vh; box-sizing:border-box;">
+    <div style="background:#1e1e1e; padding:30px; border-radius:10px; border:1px solid #333; width:100%; max-width:400px; box-sizing:border-box;">
+        <h2 style="color:#2ecc71; margin-top:0; text-align:center; font-size:20px;">Registro de Pasajero</h2>
+        <p style="color:#aaa; font-size:13px; text-align:center; margin-bottom:20px;">Crea tu cuenta para pedir carreras en San Juan de los Morros</p>
+        
+        <form action="/registro_pasajero" method="POST" style="display:flex; flex-direction:column; gap:15px;">
+            <div>
+                <label style="display:block; font-size:12px; color:#aaa; margin-bottom:5px;">Nombre Completo:</label>
+                <input type="text" name="name" required style="width:100%; padding:10px; background:#2c2c2c; border:1px solid #444; color:#fff; border-radius:5px; box-sizing:border-box;">
+            </div>
+            <div>
+                <label style="display:block; font-size:12px; color:#aaa; margin-bottom:5px;">Cédula:</label>
+                <input type="text" name="cedula" required style="width:100%; padding:10px; background:#2c2c2c; border:1px solid #444; color:#fff; border-radius:5px; box-sizing:border-box;">
+            </div>
+            <div>
+                <label style="display:block; font-size:12px; color:#aaa; margin-bottom:5px;">Teléfono:</label>
+                <input type="text" name="telefono" required style="width:100%; padding:10px; background:#2c2c2c; border:1px solid #444; color:#fff; border-radius:5px; box-sizing:border-box;">
+            </div>
+            <div>
+                <label style="display:block; font-size:12px; color:#aaa; margin-bottom:5px;">Usuario:</label>
+                <input type="text" name="usuario" required style="width:100%; padding:10px; background:#2c2c2c; border:1px solid #444; color:#fff; border-radius:5px; box-sizing:border-box;">
+            </div>
+            <div>
+                <label style="display:block; font-size:12px; color:#aaa; margin-bottom:5px;">PIN de Acceso (Contraseña):</label>
+                <input type="password" name="pin" required style="width:100%; padding:10px; background:#2c2c2c; border:1px solid #444; color:#fff; border-radius:5px; box-sizing:border-box;">
+            </div>
+            <button type="submit" style="padding:12px; background:#2ecc71; border:none; color:#000; font-weight:bold; border-radius:5px; cursor:pointer; font-size:14px; margin-top:5px;">Completar Registro</button>
+        </form>
+        
+        <div style="text-align:center; margin-top:20px;">
+            <a href="/login_pasajero" style="color:#2ecc71; text-decoration:none; font-size:13px;">¿Ya tienes una cuenta? Inicia sesión aquí</a>
+        </div>
+    </div>
+</body>
+</html>

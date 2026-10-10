@@ -1,0 +1,85 @@
+﻿<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Panel de Pasajero - Martillos & Ruedas</title>
+    <!-- Leaflet CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+</head>
+<body style="background:#121212; color:#fff; font-family:sans-serif; margin:0; padding:20px;">
+    <div style="max-width:1200px; margin:auto;">
+        
+        <!-- ENCABEZADO ORIGINAL -->
+        <div style="background:#1e1e1e; padding:15px 25px; border-radius:8px; border:1px solid #333; display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
+            <div style="color:#2ecc71; font-weight:bold; font-size:16px;">
+                Pasajero: {{ session.user_name if session.user_name else 'Maria Gabriela' }}
+            </div>
+            <a href="/logout" style="background:#e74c3c; color:white; padding:8px 15px; text-decoration:none; border-radius:5px; font-weight:bold; font-size:14px;">Cerrar Sesión</a>
+        </div>
+
+        <!-- SECCIÓN DE MAPA Y SOLICITUD CON GPS -->
+        <div style="background:#1e1e1e; padding:20px; border-radius:8px; border:1px solid #333; margin-bottom:20px;">
+            <h3 style="color:#2ecc71; margin-top:0; font-size:16px;">Solicitar Servicio de Moto-Taxi (GPS en Vivo)</h3>
+            <p style="color:#aaa; font-size:12px; margin-bottom:15px;">El sistema detectará tu ubicación exacta en San Juan de los Morros para enviarla al chofer.</p>
+            
+            <!-- CONTENEDOR DEL MAPA LEAFLET -->
+            <div id="mapa-pasajero" style="width:100%; height:320px; border-radius:6px; background:#222; margin-bottom:15px;"></div>
+            
+            <form action="/solicitar_carrera" method="POST">
+                <!-- Inputs ocultos para enviar las coordenadas GPS reales al backend -->
+                <input type="hidden" id="lat" name="lat" value="9.9142">
+                <input type="hidden" id="lng" name="lng" value="-67.3536">
+                
+                <div style="display:flex; justify-content:space-between; align-items:center;">
+                    <span id="gps-status" style="color:#f39c12; font-size:13px;">📍 Obteniendo tu ubicación GPS real...</span>
+                    <button type="submit" style="background:#2ecc71; color:#121212; border:none; padding:10px 20px; border-radius:5px; font-weight:bold; font-size:14px; cursor:pointer;">Solicitar Moto-Taxi</button>
+                </div>
+            </form>
+        </div>
+
+    </div>
+
+    <!-- Leaflet JS -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script>
+        // Inicializar mapa centrado por defecto en San Juan de los Morros
+        var map = L.map('mapa-pasajero').setView([9.9142, -67.3536], 15);
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            maxZoom: 19,
+            attribution: '© OpenStreetMap'
+        }).addTo(map);
+
+        var marker = L.marker([9.9142, -67.3536]).addTo(map)
+            .bindPopup("<b>Tu ubicación actual</b>")
+            .openPopup();
+
+        // Obtener la Geolocalización GPS real del navegador
+        if ("geolocation" in navigator) {
+            navigator.geolocation.getCurrentPosition(function(position) {
+                var lat = position.coords.latitude;
+                var lng = position.coords.longitude;
+
+                // Actualizar valores en el formulario oculto
+                document.getElementById('lat').value = lat;
+                document.getElementById('lng').value = lng;
+
+                // Mover el mapa y el marcador a la posición real del usuario
+                map.setView([lat, lng], 16);
+                marker.setLatLng([lat, lng]);
+                
+                document.getElementById('gps-status').innerHTML = "✅ Ubicación GPS obtenida con éxito";
+                document.getElementById('gps-status').style.color = "#2ecc71";
+            }, function(error) {
+                console.warn("Error obteniendo GPS: " + error.message);
+                document.getElementById('gps-status').innerHTML = "⚠️ Usando ubicación predeterminada (GPS desactivado)";
+            }, {
+                enableHighAccuracy: true,
+                timeout: 10000,
+                maximumAge: 0
+            });
+        } else {
+            document.getElementById('gps-status').innerHTML = "❌ Tu navegador no soporta geolocalización";
+        }
+    </script>
+</body>
+</html>

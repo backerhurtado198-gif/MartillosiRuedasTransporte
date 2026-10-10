@@ -1,0 +1,222 @@
+﻿<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Panel de Pasajero - MartillosiRuedas</title>
+    <!-- Leaflet CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: #121212;
+            color: #ffffff;
+            font-family: Arial, sans-serif;
+            display: flex;
+            height: 100vh;
+            overflow: hidden;
+        }
+        #map {
+            flex: 1;
+            height: 100%;
+        }
+        .sidebar {
+            width: 400px;
+            background: #1e1e1e;
+            padding: 20px;
+            box-shadow: -2px 0 10px rgba(0,0,0,0.5);
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            box-sizing: border-box;
+            z-index: 1000;
+        }
+        h2 { color: #00ff88; margin-top: 0; }
+        .form-group {
+            margin-bottom: 15px;
+            position: relative;
+        }
+        label { display: block; margin-bottom: 5px; font-size: 14px; color: #aaa; }
+        input, select {
+            width: 100%;
+            padding: 12px;
+            background: #2a2a2a;
+            border: 1px solid #444;
+            color: #fff;
+            border-radius: 6px;
+            box-sizing: border-box;
+            font-size: 14px;
+        }
+        input:focus, select:focus {
+            border-color: #00ff88;
+            outline: none;
+        }
+        #suggestions {
+            position: absolute;
+            width: 100%;
+            background: #2a2a2a;
+            border: 1px solid #444;
+            max-height: 150px;
+            overflow-y: auto;
+            z-index: 2000;
+            border-radius: 0 0 6px 6px;
+        }
+        .suggestion-item {
+            padding: 10px;
+            cursor: pointer;
+            font-size: 13px;
+            border-bottom: 1px solid #333;
+        }
+        .suggestion-item:hover {
+            background: #3a3a3a;
+            color: #00ff88;
+        }
+        .btn-solicitar {
+            background: #00ff88;
+            color: #000;
+            border: none;
+            padding: 15px;
+            font-size: 16px;
+            font-weight: bold;
+            border-radius: 6px;
+            cursor: pointer;
+            width: 100%;
+            transition: background 0.2s;
+        }
+        .btn-solicitar:hover { background: #00cc6a; }
+        .logout-link {
+            text-align: center;
+            margin-top: 10px;
+        }
+        .logout-link a { color: #ff5555; text-decoration: none; font-size: 14px; }
+        .logout-link a:hover { text-decoration: underline; }
+    </style>
+</head>
+<body>
+
+    <div class="sidebar">
+        <div>
+            <h2>🏍️ Panel de Pasajero</h2>
+            <p>Bienvenido, <strong>{{ nombre }}</strong></p>
+            <p style="font-size: 13px; color: #888;">Contacto: {{ contacto }}</p>
+            <hr style="border-color: #333; margin: 20px 0;">
+
+            <div class="form-group" style="position: relative;">
+                <label for="destino-input">¿A dónde vamos en San Juan de los Morros?</label>
+                <input type="text" id="destino-input" placeholder="Ej: Plaza Bolívar, Terminal..." autocomplete="off">
+                <div id="suggestions"></div>
+            </div>
+
+            <div class="form-group">
+                <label for="tipo-servicio">Selecciona el tipo de servicio:</label>
+                <select id="tipo-servicio">
+                    <option value="Carrera Corta">Carrera Corta ($1.00)</option>
+                    <option value="Carrera Larga">Carrera Larga ($2.00)</option>
+                    <option value="Encomienda / Mandado">Encomienda / Mandado ($1.50)</option>
+                </select>
+            </div>
+        </div>
+
+        <div>
+            <button class="btn-solicitar" onclick="solicitarCarrera()">Solicitar Moto</button>
+            <div class="logout-link">
+                <a href="/logout">Cerrar Sesión</a>
+            </div>
+        </div>
+    </div>
+
+    <div id="map"></div>
+
+    <!-- Leaflet JS -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script>
+        // Inicializar mapa centrado en San Juan de los Morros, Guárico
+        const map = L.map('map').setView([9.9137, -67.3648], 14);
+
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '&copy; OpenStreetMap contributors'
+        }).addTo(map);
+
+        let marker = null;
+        let destinoSeleccionado = "San Juan de los Morros";
+
+        // Autocompletado gratuito con Nominatim (OpenStreetMap) limitado a San Juan de los Morros
+        const inputDestino = document.getElementById('destino-input');
+        const suggestionsBox = document.getElementById('suggestions');
+
+        let timeout = null;
+        inputDestino.addEventListener('input', function() {
+            clearTimeout(timeout);
+            const query = this.value;
+            if (query.length < 3) {
+                suggestionsBox.innerHTML = '';
+                return;
+            }
+
+            timeout = setTimeout(() => {
+                // Buscamos acotado a Guárico / San Juan de los Morros para mayor precisión local
+                const url = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query + " San Juan de los Morros Guarico Venezuela")}`;
+                
+                fetch(url)
+                    .then(response => response.json())
+                    .then(data => {
+                        suggestionsBox.innerHTML = '';
+                        data.forEach(place => {
+                            const div = document.createElement('div');
+                            div.className = 'suggestion-item';
+                            div.innerText = place.display_name;
+                            div.onclick = function() {
+                                inputDestino.value = place.display_name;
+                                destinoSeleccionado = place.display_name;
+                                suggestionsBox.innerHTML = '';
+
+                                const lat = parseFloat(place.lat);
+                                const lon = parseFloat(place.lon);
+                                map.setView([lat, lon], 16);
+
+                                if (marker) {
+                                    marker.setLatLng([lat, lon]);
+                                } else {
+                                    marker = L.marker([lat, lon]).addTo(map);
+                                }
+                            };
+                            suggestionsBox.appendChild(div);
+                        });
+                    })
+                    .catch(err => console.error("Error buscando dirección:", err));
+            }, 300);
+        });
+
+        // Ocultar sugerencias al hacer clic fuera
+        document.addEventListener('click', function(e) {
+            if (e.target !== inputDestino) {
+                suggestionsBox.innerHTML = '';
+            }
+        });
+
+        function solicitarCarrera() {
+            const tipo = document.getElementById('tipo-servicio').value;
+            let precio = 1.0;
+            if (tipo.includes('Larga')) precio = 2.0;
+            if (tipo.includes('Encomienda')) precio = 1.5;
+
+            fetch('/api/solicitar', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ tipo: tipo + " - Destino: " + destinoSeleccionado, precio: precio })
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.status === 'success') {
+                    alert("¡Carrera solicitada con éxito! Un chofer la aceptará en breve.");
+                    location.reload();
+                } else {
+                    alert("Error: " + data.mensaje);
+                }
+            })
+            .catch(err => alert("Error de red al solicitar."));
+        }
+    </script>
+</body>
+</html>
