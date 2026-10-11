@@ -1,146 +1,33 @@
-﻿<!DOCTYPE html>
-<html lang="es">
-<head>
-    <meta charset="UTF-8">
-    <title>Panel de Pasajero - Martillos & Ruedas</title>
-    <!-- Librerías de Leaflet para el mapa -->
-    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-    <style>
-        .leaflet-tile {
-            filter: invert(100%) hue-rotate(180deg) brightness(95%) contrast(90%);
-        }
-    </style>
-</head>
-<body style="background:#121212; color:#fff; font-family:sans-serif; margin:0; padding:20px;">
-    <div style="max-width:900px; margin:auto;">
-        
-        <!-- ENCABEZADO Y VIDEO INTRODUCTORIO -->
-        <div style="background:#1e1e1e; padding:15px 25px; border-radius:10px; border:1px solid #333; display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
-            <div>
-                <h2 style="color:#2ecc71; margin:0; font-size:18px;">Pasajero: {{ pasajero.name }}</h2>
-                <p style="margin:5px 0 0 0; color:#aaa; font-size:13px;">Tasa de servicio: <strong style="color:#2ecc71;">Bs. {{ tarifa_global }}</strong></p>
-            </div>
-            
-            <!-- Video Animado del Logotipo (intro.mp4) -->
-            <div style="width: 100px; height: 60px; overflow: hidden; border-radius: 6px; border: 1px solid #444;">
-                <video autoplay muted playsinline loop style="width: 100%; height: 100%; object-fit: cover;">
-                    <source src="{{ url_for('static', filename='intro.mp4') }}" type="video/mp4">
-                </video>
-            </div>
+﻿<form action="/pedir_carrera" method="POST" id="form-carrera">
+    <input type="hidden" name="latitud_origen" id="latitud_origen">
+    <input type="hidden" name="longitud_origen" id="longitud_origen">
 
-            <a href="/logout" style="background:#e74c3c; color:white; padding:8px 15px; text-decoration:none; border-radius:5px; font-weight:bold; font-size:13px;">Cerrar Sesión</a>
-        </div>
-
-        <!-- SECCIÓN DE MAPA Y SOLICITUD DE CARRERA -->
-        <div style="background:#1e1e1e; padding:20px; border-radius:10px; border:1px solid #333; margin-bottom:20px;">
-            <h3 style="color:#2ecc71; margin-top:0; font-size:16px;">Solicitar Servicio de Moto-Taxi</h3>
-            <p style="color:#aaa; font-size:12px; margin-bottom:15px;">📍 Toca el mapa para indicar tu Origen. Luego vuelve a tocar para el Destino.</p>
-            
-            <div id="mapa-solicitud" style="width:100%; height:250px; border-radius:8px; border:1px solid #444; margin-bottom:15px;"></div>
-
-            <form action="/solicitar_carrera" method="POST" id="form-carrera" style="display:flex; gap:15px; align-items:center; flex-wrap:wrap;">
-                <input type="hidden" name="origen_lat" id="origen_lat">
-                <input type="hidden" name="origen_lng" id="origen_lng">
-                <input type="hidden" name="destino_lat" id="destino_lat">
-                <input type="hidden" name="destino_lng" id="destino_lng">
-
-                <div style="flex:1; min-width:200px;">
-                    <label style="display:block; font-size:12px; color:#aaa; margin-bottom:5px;">Tipo de Servicio:</label>
-                    <select name="tipo" style="width:100%; padding:10px; background:#2c2c2c; border:1px solid #444; color:#fff; border-radius:5px;">
-                        <option value="Moto-Taxi Standard">Moto-Taxi Standard (Bs. {{ tarifa_global }})</option>
-                    </select>
-                </div>
-                <button type="submit" id="btn-pedir" disabled style="padding:11px 20px; background:#555; border:none; color:#fff; font-weight:bold; border-radius:5px; cursor:not-allowed; font-size:14px; margin-top:18px;">Selecciona Origen y Destino</button>
-            </form>
-        </div>
-
-        <!-- HISTORIAL DE VIAJES -->
-        <div style="background:#1e1e1e; padding:20px; border-radius:10px; border:1px solid #333;">
-            <h3 style="color:#2ecc71; margin-top:0; font-size:16px;">Historial y Estado de Mis Viajes</h3>
-            <table style="width:100%; border-collapse:collapse; text-align:left; margin-top:10px;">
-                <thead>
-                    <tr style="border-bottom:1px solid #444; color:#aaa; font-size:13px;">
-                        <th style="padding:8px;">ID</th>
-                        <th style="padding:8px;">Tipo</th>
-                        <th style="padding:8px;">Precio</th>
-                        <th style="padding:8px;">Estado</th>
-                        <th style="padding:8px;">Chofer Asignado</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% if rides %}
-                        {%- for r in rides -%}
-                        <tr style="border-bottom:1px solid #2c2c2c; font-size:14px;">
-                            <td style="padding:8px;">#{{ r.id }}</td>
-                            <td style="padding:8px;">{{ r.tipo }}</td>
-                            <td style="padding:8px; color:#2ecc71;">Bs. {{ r.precio }}</td>
-                            <td style="padding:8px; color: {% if r.estado == 'Completada' %}#2ecc71{% elif r.estado == 'En Curso' %}#f39c12{% else %}#f1c40f{% endif %}; font-weight:bold;">{{ r.estado }}</td>
-                            <td style="padding:8px; color: {% if r.chofer == 'Sin Asignar' %}#e74c3c{% else %}#2ecc71{% endif %};">{{ r.chofer }}</td>
-                        </tr>
-                        {%- endfor -%}
-                    {% else %}
-                        <tr><td colspan="5" style="text-align:center; padding:15px; color:#777;">No tienes viajes registrados.</td></tr>
-                    {% endif %}
-                </tbody>
-            </table>
-        </div>
-
+    <div class="mb-3">
+        <label for="destino" class="form-label"><b>¿A dónde quieres ir?</b></label>
+        <input type="text" class="form-control" name="destino" id="destino" placeholder="Ej: San Juan Centro, Plaza Bolívar" required>
     </div>
 
-    <!-- Script de Mapa y Selección de Puntos -->
-    <script>
-        var map = L.map('mapa-solicitud').setView([9.915, -67.355], 14);
-        L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
-            maxZoom: 19,
-            attribution: '&copy; OpenStreetMap'
-        }).addTo(map);
+    <div class="mb-3">
+        <label for="referencia" class="form-label"><b>Punto de referencia / Notas (Opcional)</b></label>
+        <input type="text" class="form-control" name="referencia" id="referencia" placeholder="Ej: Frente a la panadería, portón negro">
+    </div>
 
-        var origenMarker = null;
-        var destinoMarker = null;
-        var paso = 1;
+    <button type="submit" class="btn btn-primary w-100" id="btn-solicitar">Solicitar Mototaxi</button>
+</form>
 
-        map.on('click', function(e) {
-            var lat = e.latlng.lat;
-            var lng = e.latlng.lng;
-
-            if (lat < 9.870 || lat > 9.960 || lng < -67.380 || lng > -67.310) {
-                alert("⚠️ Fuera de zona permitida. El servicio opera exclusivamente en San Juan de los Morros.");
-                return;
-            }
-
-            if (paso === 1) {
-                if (origenMarker) map.removeLayer(origenMarker);
-                if (destinoMarker) { map.removeLayer(destinoMarker); destinoMarker = null; }
-                
-                origenMarker = L.marker([lat, lng]).addTo(map).bindPopup("<b>Origen</b>").openPopup();
-                document.getElementById('origen_lat').value = lat;
-                document.getElementById('origen_lng').value = lng;
-                document.getElementById('destino_lat').value = '';
-                document.getElementById('destino_lng').value = '';
-                
-                document.getElementById('btn-pedir').innerText = "Toca para marcar Destino";
-                document.getElementById('btn-pedir').style.background = "#555";
-                document.getElementById('btn-pedir').disabled = true;
-                paso = 2;
-            } else if (paso === 2) {
-                if (destinoMarker) map.removeLayer(destinoMarker);
-                
-                destinoMarker = L.marker([lat, lng]).addTo(map).bindPopup("<b>Destino</b>").openPopup();
-                document.getElementById('destino_lat').value = lat;
-                document.getElementById('destino_lng').value = lng;
-                
-                var btn = document.getElementById('btn-pedir');
-                btn.innerText = "Pedir Carrera Ahora";
-                btn.style.background = "#2ecc71";
-                btn.style.cursor = "pointer";
-                btn.disabled = false;
-                paso = 1;
-            }
-        });
-    </script>
-    <script>
-        setTimeout(function() { location.reload(); }, 5000);
-    </script>
-</body>
-</html>
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+    if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(
+            function(position) {
+                document.getElementById('latitud_origen').value = position.coords.latitude;
+                document.getElementById('longitud_origen').value = position.coords.longitude;
+            },
+            function(error) {
+                console.log("Error de GPS: ", error);
+            },
+            { enableHighAccuracy: true }
+        );
+    }
+});
+</script>
