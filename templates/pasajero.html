@@ -12,6 +12,12 @@
             <div class="col-md-6">
                 <div class="card shadow-sm p-4">
                     <h3 class="text-center mb-4 text-primary">🏍️ Martillos & Ruedas</h3>
+                    
+                    <!-- Aviso de estado del GPS en tiempo real -->
+                    <div id="gps-status" class="alert alert-warning text-center py-2 mb-3" style="font-size: 14px;">
+                        📍 Solicitando permiso de GPS...
+                    </div>
+
                     <form action="/pedir_carrera" method="POST" id="form-carrera">
                         <input type="hidden" name="latitud_origen" id="latitud_origen">
                         <input type="hidden" name="longitud_origen" id="longitud_origen">
@@ -34,18 +40,56 @@
     </div>
 
     <script>
-    document.addEventListener("DOMContentLoaded", function() {
-        if (navigator.geolocation) {
-            navigator.geolocation.getCurrentPosition(
-                function(position) {
-                    document.getElementById('latitud_origen').value = position.coords.latitude;
-                    document.getElementById('longitud_origen').value = position.coords.longitude;
-                },
-                function(error) {
-                    console.log("Error de GPS: ", error);
-                },
-                { enableHighAccuracy: true }
-            );
+    const form = document.getElementById('form-carrera');
+    const statusDiv = document.getElementById('gps-status');
+    const btnSolicitar = document.getElementById('btn-solicitar');
+
+    function obtenerGPS(callback) {
+        if (!navigator.geolocation) {
+            statusDiv.className = "alert alert-danger text-center py-2 mb-3";
+            statusDiv.innerHTML = "❌ Tu navegador no soporta GPS.";
+            if (callback) callback();
+            return;
+        }
+
+        statusDiv.className = "alert alert-warning text-center py-2 mb-3";
+        statusDiv.innerHTML = "📍 Obteniendo ubicación exacta por GPS...";
+
+        navigator.geolocation.getCurrentPosition(
+            function(position) {
+                document.getElementById('latitud_origen').value = position.coords.latitude;
+                document.getElementById('longitud_origen').value = position.coords.longitude;
+                statusDiv.className = "alert alert-success text-center py-2 mb-3";
+                statusDiv.innerHTML = "✅ ¡GPS conectado! Ubicación lista para el chofer.";
+                if (callback) callback();
+            },
+            function(error) {
+                statusDiv.className = "alert alert-danger text-center py-2 mb-3";
+                statusDiv.innerHTML = "⚠️ Activa el GPS de tu teléfono para continuar.";
+                btnSolicitar.disabled = false;
+                btnSolicitar.innerHTML = "Solicitar Mototaxi";
+            },
+            { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 }
+        );
+    }
+
+    // Pedir GPS al abrir la página
+    window.addEventListener('DOMContentLoaded', function() {
+        obtenerGPS();
+    });
+
+    // Forzar lectura del GPS al hacer clic en solicitar
+    form.addEventListener('submit', function(e) {
+        const lat = document.getElementById('latitud_origen').value;
+        const lng = document.getElementById('longitud_origen').value;
+
+        if (!lat || !lng) {
+            e.preventDefault();
+            btnSolicitar.disabled = true;
+            btnSolicitar.innerHTML = "Obteniendo GPS...";
+            obtenerGPS(function() {
+                form.submit();
+            });
         }
     });
     </script>
