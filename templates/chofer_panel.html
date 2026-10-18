@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Panel de Chofer - Martillos & Ruedas</title>
+    <style>
+        body { background-color: #121212; color: #e0e0e0; font-family: Arial, sans-serif; margin: 0; padding: 20px; }
+        .driver-header { background: #1e1e1e; padding: 15px 20px; border-radius: 8px; margin-bottom: 25px; border: 1px solid #333; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 15px; }
+        .driver-header h3 { color: #ff9800; margin: 0; font-size: 16px; }
+        .btn-danger { background: #f44336; color: #fff; font-weight: bold; border: none; padding: 6px 14px; border-radius: 4px; cursor: pointer; font-size: 13px; text-decoration: none; display: inline-block; }
+        .btn-danger:hover { background: #d32f2f; }
+        .card { background: #1a1a1a; padding: 20px; border-radius: 8px; margin-bottom: 20px; border: 1px solid #333; }
+    </style>
+</head>
+<body>
+    <div class="driver-header">
+        <h3>Chofer: <span style="color:#fff;">{{ chofer.nombre if chofer else 'Chofer' }}</span> | Saldo: <span style="color:#00e676;">Bs. {{ chofer.saldo if chofer else '0' }}</span> | Deuda: <span style="color:#ff5252;">Bs. {{ chofer.deuda if chofer else '0' }}</span></h3>
+        <a href="{{ url_for('driver_bp.login_chofer') }}" class="btn-danger">Cerrar Sesión</a>
+    </div>
+
+    <div class="card">
+        <h3 style="color: #ff9800; margin-top: 0;">Estado de Operaciones</h3>
+        <p>Tarifa actual del sistema: <b>Bs. {{ tarifa if tarifa else '100' }}</b></p>
+        <p>Unidad: <b>{{ chofer.unidad if chofer else 'N/A' }}</b> | Padrino: <b>{{ chofer.padrino if chofer else 'N/A' }}</b></p>
+    </div>
+</body>
+</html>

@@ -2,156 +2,57 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Solicitar Mototaxi - Martillos & Ruedas</title>
+    <title>Panel de Pasajero - Martillos & Ruedas</title>
     <style>
-        body {
-            background-color: #f8f9fa;
-            font-family: Arial, sans-serif;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
-            margin: 0;
-        }
-        .card {
-            background: white;
-            padding: 30px;
-            border-radius: 12px;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
-            width: 100%;
-            max-width: 420px;
-        }
-        h3 {
-            text-align: center;
-            color: #0d6efd;
-            margin-bottom: 20px;
-        }
-        .mb-3 {
-            margin-bottom: 15px;
-        }
-        label {
-            display: block;
-            margin-bottom: 6px;
-            font-weight: bold;
-            color: #333;
-        }
-        input {
-            width: 100%;
-            padding: 12px;
-            border: 1px solid #ced4da;
-            border-radius: 6px;
-            box-sizing: border-box;
-            font-size: 15px;
-        }
-        input:focus {
-            border-color: #0d6efd;
-            outline: none;
-        }
-        .btn {
-            width: 100%;
-            padding: 12px;
-            background-color: #0d6efd;
-            color: white;
-            border: none;
-            border-radius: 6px;
-            font-size: 16px;
-            cursor: pointer;
-            font-weight: bold;
-        }
-        .btn:hover {
-            background-color: #0b5ed7;
-        }
-        .alert {
-            padding: 10px;
-            margin-bottom: 15px;
-            border-radius: 6px;
-            text-align: center;
-            font-size: 14px;
-            font-weight: bold;
-        }
-        .alert-warning { background-color: #fff3cd; color: #856404; border: 1px solid #ffeeba; }
-        .alert-success { background-color: #d1e7dd; color: #0f5132; border: 1px solid #badbcc; }
-        .alert-danger { background-color: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
+        body { background-color: #121212; color: #e0e0e0; font-family: Arial, sans-serif; margin: 0; padding: 20px; }
+        .passenger-header { background: #1e1e1e; padding: 15px 20px; border-radius: 8px; margin-bottom: 25px; border: 1px solid #333; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 15px; }
+        .passenger-header h3 { color: #ff9800; margin: 0; font-size: 16px; }
+        .btn-danger { background: #f44336; color: #fff; font-weight: bold; border: none; padding: 6px 14px; border-radius: 4px; cursor: pointer; font-size: 13px; text-decoration: none; display: inline-block; }
+        .btn-danger:hover { background: #d32f2f; }
+        .btn-amber { background: #ff9800; color: #000; font-weight: bold; border: none; padding: 10px 20px; border-radius: 4px; cursor: pointer; font-size: 14px; }
+        .btn-amber:hover { background: #e68900; }
+        .card { background: #1a1a1a; padding: 20px; border-radius: 8px; margin-bottom: 20px; border: 1px solid #333; }
+        select { background: #222; color: #fff; border: 1px solid #444; padding: 8px; border-radius: 4px; width: 100%; box-sizing: border-box; }
     </style>
-</head>
+    <style>
+        /* Ajuste óptimo del Banner Institucional para evitar recortes */
+        .panel-pasajero img, .container img, img[alt*="Banner"], img[alt*="institucional"], .banner-img {
+            max-width: 100% !important;
+            height: 170px !important;
+            object-fit: contain !important;
+            background-color: #111 !important;
+            border-radius: 12px !important;
+            display: block !important;
+            margin: 0 auto 15px auto !important;
+        }
+    </style>
+    </head>
 <body>
-    <div class="card">
-        <h3>🏍️ Martillos & Ruedas</h3>
-        
-        <div id="gps-status" class="alert alert-warning">
-            📍 Solicitando permiso de GPS...
-        </div>
-
-        <form action="/pedir_carrera" method="POST" id="form-carrera">
-            <input type="hidden" name="latitud_origen" id="latitud_origen">
-            <input type="hidden" name="longitud_origen" id="longitud_origen">
-
-            <div class="mb-3">
-                <label for="destino">¿A dónde quieres ir?</label>
-                <input type="text" name="destino" id="destino" placeholder="Ej: San Juan Centro, Plaza Bolívar" required>
-            </div>
-
-            <div class="mb-3">
-                <label for="referencia">Punto de referencia / Notas (Opcional)</label>
-                <input type="text" name="referencia" id="referencia" placeholder="Ej: Frente a la panadería, portón negro">
-            </div>
-
-            <button type="submit" class="btn" id="btn-solicitar">Solicitar Mototaxi</button>
-        </form>
+    <div class="passenger-header">
+        <h3>Pasajero: <span style="color:#fff;">{{ pasajero.nombre }}</span> | Tarifa del servicio: <span style="color:#00e676;">Bs. {{ tarifa }}</span></h3>
+        <a href="{{ url_for('pasajero_bp.login_pasajero') }}" class="btn-danger">Cerrar SesiÃ³n</a>
     </div>
 
-    <script>
-    const form = document.getElementById('form-carrera');
-    const statusDiv = document.getElementById('gps-status');
-    const btnSolicitar = document.getElementById('btn-solicitar');
+    <div class="card">
+        <h3 style="color: #ff9800; margin-top: 0;">Solicitar Servicio de Moto-Taxi</h3>
+        <div style="margin-bottom: 15px;">
+            <label style="font-size: 12px; color: #aaa;">Tipo de Servicio:</label>
+            <select style="margin-top: 5px;">
+                <option>Moto-Taxi Standard ( Bs. {{ tarifa }} )</option>
+            </select>
+        </div>
+        <button class="btn-amber">Pedir Carrera Ahora</button>
+    </div>
 
-    function obtenerGPS(callback) {
-        if (!navigator.geolocation) {
-            statusDiv.className = "alert alert-danger";
-            statusDiv.innerHTML = "❌ Tu navegador no soporta GPS.";
-            if (callback) callback();
-            return;
-        }
-
-        statusDiv.className = "alert alert-warning";
-        statusDiv.innerHTML = "📍 Obteniendo ubicación exacta por GPS...";
-
-        navigator.geolocation.getCurrentPosition(
-            function(position) {
-                document.getElementById('latitud_origen').value = position.coords.latitude;
-                document.getElementById('longitud_origen').value = position.coords.longitude;
-                statusDiv.className = "alert alert-success";
-                statusDiv.innerHTML = "✅ ¡GPS conectado! Ubicación lista.";
-                if (callback) callback();
-            },
-            function(error) {
-                statusDiv.className = "alert alert-danger";
-                statusDiv.innerHTML = "⚠️ Activa el GPS de tu teléfono para continuar.";
-                btnSolicitar.disabled = false;
-                btnSolicitar.innerHTML = "Solicitar Mototaxi";
-            },
-            { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 }
-        );
-    }
-
-    window.addEventListener('DOMContentLoaded', function() {
-        obtenerGPS();
-    });
-
-    form.addEventListener('submit', function(e) {
-        const lat = document.getElementById('latitud_origen').value;
-        const lng = document.getElementById('longitud_origen').value;
-
-        if (!lat || !lng) {
-            e.preventDefault();
-            btnSolicitar.disabled = true;
-            btnSolicitar.innerHTML = "Obteniendo GPS...";
-            obtenerGPS(function() {
-                form.submit();
-            });
-        }
-    });
-    </script>
+    <div class="card">
+        <h3 style="color: #ff9800; margin-top: 0;">Historial y Estado de Mis Viajes</h3>
+        <table>
+            <thead><tr><th>ID</th><th>Tipo</th><th>Precio</th><th>Estado</th><th>Chofer Asignado</th></tr></thead>
+            <tbody>
+                <tr><td colspan="5" style="text-align: center; color: #777;">No has solicitado carreras todavÃ­a.</td></tr>
+            </tbody>
+        </table>
+    </div>
 </body>
 </html>
+

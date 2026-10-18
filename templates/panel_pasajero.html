@@ -2,84 +2,167 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <title>Panel de Pasajero - Martillos & Ruedas</title>
-    <!-- Leaflet CSS -->
-    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-</head>
-<body style="background:#121212; color:#fff; font-family:sans-serif; margin:0; padding:20px;">
-    <div style="max-width:1200px; margin:auto;">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pasajero - Martillos & Ruedas</title>
+    <style>
+        * { box-sizing: border-box; }
+        body { background-color: #0b0b0b; color: #fff; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 0; padding: 20px; display: flex; flex-direction: column; align-items: center; min-height: 100vh; justify-content: center; }
         
-        <!-- ENCABEZADO ORIGINAL -->
-        <div style="background:#1e1e1e; padding:15px 25px; border-radius:8px; border:1px solid #333; display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
-            <div style="color:#2ecc71; font-weight:bold; font-size:16px;">
-                Pasajero: {{ session.user_name if session.user_name else 'Maria Gabriela' }}
+        .container { width: 100%; max-width: 380px; }
+        
+        .header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #222; padding-bottom: 12px; margin-bottom: 20px; width: 100%; }
+        .user-tag { font-size: 14px; color: #aaa; }
+        .user-tag strong { color: #ff9800; }
+
+        /* BANNER INSTITUCIONAL */
+        .banner-container { width: 100%; height: 160px; border-radius: 12px; overflow: hidden; border: 1px solid #333; margin-bottom: 20px; background: #141414; display: flex; justify-content: center; align-items: center; }
+        .banner-container img, .banner-container video { width: 100%; height: 100%; object-fit: cover; }
+
+        .card { background: #141414; border: 1px solid #262626; border-radius: 14px; padding: 22px; text-align: center; box-shadow: 0 10px 30px rgba(0,0,0,0.8); width: 100%; margin-bottom: 20px; }
+        
+        .btn-orange { background: #ff9800; color: #000; border: none; padding: 16px; font-weight: bold; border-radius: 10px; cursor: pointer; width: 100%; font-size: 16px; transition: 0.2s; box-shadow: 0 4px 15px rgba(255,152,0,0.3); }
+        .btn-orange:hover { background: #e68900; }
+        
+        .btn-danger { background: #d9534f; color: #fff; border: none; padding: 12px; font-weight: bold; border-radius: 8px; cursor: pointer; width: 100%; font-size: 14px; margin-top: 10px; }
+
+        .status-badge { background: #1c1c1e; border: 1px solid #333; padding: 18px; border-radius: 12px; text-align: center; }
+        .rating-stars { display: flex; justify-content: center; gap: 10px; font-size: 28px; cursor: pointer; margin: 12px 0; }
+    </style>
+    <style>
+        /* Ajuste óptimo del Banner Institucional para evitar recortes */
+        .panel-pasajero img, .container img, img[alt*="Banner"], img[alt*="institucional"], .banner-img {
+            max-width: 100% !important;
+            height: 170px !important;
+            object-fit: contain !important;
+            background-color: #111 !important;
+            border-radius: 12px !important;
+            display: block !important;
+            margin: 0 auto 15px auto !important;
+        }
+    </style>
+        <style>
+        /* Aumento sutil y fijo del cuadro del banner institucional sin alterar su posición */
+        .panel-pasajero img, .container img, img[alt*="Banner"], img[alt*="institucional"], .banner-img {
+            width: 240px !important;
+            height: 240px !important;
+            max-width: 100% !important;
+            object-fit: cover !important;
+            border-radius: 12px !important;
+            display: block !important;
+            margin: 0 auto 15px auto !important;
+        }
+    </style>
+        <style>
+        /* Aumento un poquito más manteniendo su posición fija original */
+        .panel-pasajero img, .container img, img[alt*="Banner"], img[alt*="institucional"], .banner-img {
+            width: 290px !important;
+            height: 290px !important;
+            max-width: 100% !important;
+            object-fit: cover !important;
+            border-radius: 14px !important;
+            display: block !important;
+            margin: 0 auto 15px auto !important;
+        }
+    </style>
+    </head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="user-tag">Hola, <strong>{{ pasajero_nombre }}</strong></div>
+            <a href="/login_pasajero" style="color: #d9534f; text-decoration: none; font-size: 13px; font-weight: bold;">Salir</a>
+        </div>
+
+        <!-- BANNER INSTITUCIONAL -->
+        {% if config.banner %}
+            <div class="banner-container">
+                {% if config.banner.endswith('.mp4') or config.banner.endswith('.webm') or config.banner.endswith('.mov') %}
+                    <video src="{{ config.banner }}" autoplay muted loop playsinline></video>
+                {% else %}
+                    <img src="{{ config.banner }}" alt="Martillos & Ruedas">
+                {% endif %}
             </div>
-            <a href="/logout" style="background:#e74c3c; color:white; padding:8px 15px; text-decoration:none; border-radius:5px; font-weight:bold; font-size:14px;">Cerrar Sesión</a>
-        </div>
+        {% endif %}
 
-        <!-- SECCIÓN DE MAPA Y SOLICITUD CON GPS -->
-        <div style="background:#1e1e1e; padding:20px; border-radius:8px; border:1px solid #333; margin-bottom:20px;">
-            <h3 style="color:#2ecc71; margin-top:0; font-size:16px;">Solicitar Servicio de Moto-Taxi (GPS en Vivo)</h3>
-            <p style="color:#aaa; font-size:12px; margin-bottom:15px;">El sistema detectará tu ubicación exacta en San Juan de los Morros para enviarla al chofer.</p>
-            
-            <!-- CONTENEDOR DEL MAPA LEAFLET -->
-            <div id="mapa-pasajero" style="width:100%; height:320px; border-radius:6px; background:#222; margin-bottom:15px;"></div>
-            
-            <form action="/solicitar_carrera" method="POST">
-                <!-- Inputs ocultos para enviar las coordenadas GPS reales al backend -->
-                <input type="hidden" id="lat" name="lat" value="9.9142">
-                <input type="hidden" id="lng" name="lng" value="-67.3536">
-                
-                <div style="display:flex; justify-content:space-between; align-items:center;">
-                    <span id="gps-status" style="color:#f39c12; font-size:13px;">📍 Obteniendo tu ubicación GPS real...</span>
-                    <button type="submit" style="background:#2ecc71; color:#121212; border:none; padding:10px 20px; border-radius:5px; font-weight:bold; font-size:14px; cursor:pointer;">Solicitar Moto-Taxi</button>
-                </div>
-            </form>
+        <!-- ESTADO O BOTÓN DE SOLICITUD -->
+        <div class="card">
+            <div id="panel-estado">
+                {% if viaje_activo %}
+                    <div class="status-badge">
+                        {% if viaje_activo.estado == 'pendiente' %}
+                            <div style="color: #f0ad4e; font-weight: bold; font-size: 16px; margin-bottom: 8px;">🟡 Buscando Mototaxista...</div>
+                            <p style="font-size: 13px; color: #aaa; margin: 0 0 15px 0;">Tu solicitud por GPS ha sido emitida (Tarifa: Bs. {{ config.tarifa }}).</p>
+                            <form action="/cancelar_viaje/{{ viaje_activo.id }}" method="POST">
+                                <button type="submit" class="btn-danger">Cancelar Solicitud</button>
+                            </form>
+                        {% elif viaje_activo.estado == 'aprobado' %}
+                            <div style="color: #5cb85c; font-weight: bold; font-size: 17px; margin-bottom: 10px;">🟢 ¡Un motorizado va por ti!</div>
+                            <div style="background: #181818; border: 1px solid #333; padding: 14px; border-radius: 10px; text-align: left; font-size: 13px; margin-bottom: 10px;">
+                                <p style="margin: 4px 0;"><strong>Chofer:</strong> {{ viaje_activo.chofer_nombre }}</p>
+                                <p style="margin: 4px 0;"><strong>Teléfono:</strong> {{ viaje_activo.chofer_tel }}</p>
+                                <p style="margin: 4px 0;"><strong>Moto:</strong> {{ viaje_activo.moto_modelo }} - <span style="color: #ff9800; font-weight: bold;">{{ viaje_activo.moto_placa }}</span></p>
+                            </div>
+                        {% elif viaje_activo.estado == 'finalizado' and viaje_activo.calificacion == 0 %}
+                            <div style="color: #ffc107; font-weight: bold; font-size: 16px; margin-bottom: 5px;">⭐ ¡Llegaste a tu destino!</div>
+                            <p style="font-size: 13px; color: #aaa; margin-bottom: 10px;">Califica la atención de tu mototaxista:</p>
+                            <form action="/calificar_viaje/{{ viaje_activo.id }}" method="POST" style="text-align: center; padding: 10px;"><style>.estrellas-caja { display: flex; flex-direction: row-reverse; justify-content: center; gap: 10px; margin-bottom: 20px; } .estrellas-caja input { display: none; } .estrellas-caja label { font-size: 40px; color: #444; cursor: pointer; transition: 0.2s; } .estrellas-caja label:hover, .estrellas-caja label:hover ~ label, .estrellas-caja input:checked ~ label { color: #FFD700; text-shadow: 0 0 10px rgba(255,215,0,0.5); }</style><div class="estrellas-caja"><input type="radio" name="estrellas" id="s5" value="5" checked><label for="s5">★</label><input type="radio" name="estrellas" id="s4" value="4"><label for="s4">★</label><input type="radio" name="estrellas" id="s3" value="3"><label for="s3">★</label><input type="radio" name="estrellas" id="s2" value="2"><label for="s2">★</label><input type="radio" name="estrellas" id="s1" value="1"><label for="s1">★</label></div><button type="submit" style="background: #f59e0b; color: #000; padding: 12px; width: 100%; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; font-size: 16px;">Enviar Calificación</button></form>
+                        {% endif %}
+                    </div>
+                {% else %}
+                    <h3 style="color: #ff9800; margin-top: 0; font-size: 18px; margin-bottom: 8px;">Solicitar Moto-Taxi</h3>
+                    <p style="color: #888; font-size: 13px; margin-bottom: 20px;">Tarifa fija actual: <strong>Bs. {{ config.tarifa }}</strong></p>
+                    
+                    <form id="form-solicitud" action="/solicitar_taxi" method="POST">
+                        <input type="hidden" name="origen" id="origen-gps" value="Ubicación GPS Automática">
+                        <input type="hidden" name="lat" id="lat-gps" value="9.9048">
+                        <input type="hidden" name="lng" id="lng-gps" value="-67.3537">
+                        <button type="button" onclick="pedirConGPS()" class="btn-orange">🚀 Pedir Carrera Ahora</button>
+                    </form>
+                {% endif %}
+            </div>
         </div>
-
     </div>
 
-    <!-- Leaflet JS -->
-    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script>
-        // Inicializar mapa centrado por defecto en San Juan de los Morros
-        var map = L.map('mapa-pasajero').setView([9.9142, -67.3536], 15);
-        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-            maxZoom: 19,
-            attribution: '© OpenStreetMap'
-        }).addTo(map);
-
-        var marker = L.marker([9.9142, -67.3536]).addTo(map)
-            .bindPopup("<b>Tu ubicación actual</b>")
-            .openPopup();
-
-        // Obtener la Geolocalización GPS real del navegador
-        if ("geolocation" in navigator) {
-            navigator.geolocation.getCurrentPosition(function(position) {
-                var lat = position.coords.latitude;
-                var lng = position.coords.longitude;
-
-                // Actualizar valores en el formulario oculto
-                document.getElementById('lat').value = lat;
-                document.getElementById('lng').value = lng;
-
-                // Mover el mapa y el marcador a la posición real del usuario
-                map.setView([lat, lng], 16);
-                marker.setLatLng([lat, lng]);
-                
-                document.getElementById('gps-status').innerHTML = "✅ Ubicación GPS obtenida con éxito";
-                document.getElementById('gps-status').style.color = "#2ecc71";
-            }, function(error) {
-                console.warn("Error obteniendo GPS: " + error.message);
-                document.getElementById('gps-status').innerHTML = "⚠️ Usando ubicación predeterminada (GPS desactivado)";
-            }, {
-                enableHighAccuracy: true,
-                timeout: 10000,
-                maximumAge: 0
-            });
-        } else {
-            document.getElementById('gps-status').innerHTML = "❌ Tu navegador no soporta geolocalización";
+        function pedirConGPS() {
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(function(position) {
+                    document.getElementById('lat-gps').value = position.coords.latitude;
+                    document.getElementById('lng-gps').value = position.coords.longitude;
+                    document.getElementById('origen-gps').value = 'GPS: ' + position.coords.latitude.toFixed(4) + ', ' + position.coords.longitude.toFixed(4);
+                    document.getElementById('form-solicitud').submit();
+                }, function(error) {
+                    document.getElementById('form-solicitud').submit();
+                }, { timeout: 10000 });
+            } else {
+                document.getElementById('form-solicitud').submit();
+            }
         }
+
+        // MOTOR DE TIEMPO REAL (POLLING CADA 3 SEGUNDOS)
+        let estadoAnterior = "{{ viaje_activo.estado if viaje_activo else 'ninguno' }}";
+        let idAnterior = "{{ viaje_activo.id if viaje_activo else 0 }}";
+
+        setInterval(function() {
+            fetch('/api/estado_pasajero')
+                .then(res => res.json())
+                .then(data => {
+                    if (data.activo) {
+                        if (data.id != idAnterior || data.estado != estadoAnterior) {
+                            window.location.reload();
+                        }
+                    } else {
+                        if (estadoAnterior != 'ninguno') {
+                            window.location.reload();
+                        }
+                    }
+                })
+                .catch(err => {});
+        }, 3000);
     </script>
-</body>
+{% if viaje_activo %}<div style='position:fixed; bottom:20px; right:20px; background:#121212; color:#fff; padding:20px; border-radius:15px; z-index:9999; box-shadow:0 4px 10px rgba(0,0,0,0.5); border: 2px solid #FFD700;'><h3 style='margin-top:0; color:#FFD700;'>🚕 Tu Chofer va en camino</h3><p><b>Chofer:</b> {{ viaje_activo.chofer_nombre }}</p><p><b>Moto:</b> {{ viaje_activo.moto_modelo }} ({{ viaje_activo.moto_color }}) - Placa: {{ viaje_activo.moto_placa }}</p><p><b>Teléfono (Pago Móvil):</b> <span style='color:#FFD700; font-size:18px; font-weight:bold;'>{{ viaje_activo.chofer_tel }}</span></p><div style='background:#222; padding:10px; border-radius:8px; margin-top:10px; text-align:center;'><small style='color:#ccc;'>Paga directamente al chofer al llegar a tu destino.</small></div></div>{% endif %}</body>
 </html>
+
+
+
+
+

@@ -2,107 +2,241 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <title>Panel de Chofer - Martillos & Ruedas</title>
-    <!-- Leaflet CSS para el mapa GPS -->
-    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-</head>
-<body style="background:#121212; color:#fff; font-family:sans-serif; margin:0; padding:20px;">
-    <div style="max-width:1200px; margin:auto;">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Panel Chofer - Martillos & Ruedas</title>
+    <style>
+        * { box-sizing: border-box; }
+        body { background-color: #0b0b0b; color: #fff; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 0; padding: 15px; }
+        .header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #222; padding-bottom: 12px; margin-bottom: 15px; flex-wrap: wrap; gap: 10px; }
+        .user-info { font-size: 14px; color: #aaa; }
+        .user-info strong { color: #ff9800; }
         
-        <!-- ENCABEZADO ORIGINAL -->
-        <div style="background:#1e1e1e; padding:15px 20px; border-radius:8px; border:1px solid #333; display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
-            <div>
-                <h2 style="color:#2ecc71; margin:0; font-size:18px;">Chofer: {{ chofer.name if chofer.name is defined else (chofer.usuario if chofer.usuario is defined else 'Backer Hurtado') }} (Unidad: Unidad #1)</h2>
-                <p style="margin:5px 0 0 0; color:#aaa; font-size:12px;">Saldo Chofer: <strong style="color:#2ecc71;">Bs. {{ chofer.saldo_prepagado if chofer.saldo_prepagado is defined else '6010.0' }}</strong> | Ganancias Acumuladas (Deuda Sistema): <span style="color:#e74c3c;">Bs. 3400.0</span></p>
-            </div>
-            <div style="display:flex; gap:10px; align-items:center;">
-                <!-- BOTÓN DE DISPONIBILIDAD (NUEVO Y DISCRETO) -->
-                <form action="/chofer/toggle_estado" method="POST" style="margin:0;">
-                    <button type="submit" style="background:#2ecc71; color:#121212; border:none; padding:8px 12px; border-radius:5px; font-weight:bold; font-size:12px; cursor:pointer;">🟢 Disponible</button>
-                </form>
-                <a href="/logout" style="background:#e74c3c; color:white; padding:8px 12px; text-decoration:none; border-radius:5px; font-weight:bold; font-size:12px;">Cerrar Sesión</a>
-            </div>
+        .metrics-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 10px; margin-bottom: 15px; }
+        .metric-card { background: #141414; border: 1px solid #262626; border-radius: 10px; padding: 12px; text-align: center; }
+        .metric-label { font-size: 10px; color: #888; text-transform: uppercase; margin-bottom: 4px; }
+        .metric-val { font-size: 16px; font-weight: bold; color: #ff9800; }
+
+        .card { background: #141414; border: 1px solid #262626; border-radius: 12px; padding: 16px; margin-bottom: 15px; }
+        .card-title { color: #ff9800; margin-top: 0; font-size: 15px; margin-bottom: 12px; display: flex; align-items: center; justify-content: space-between; }
+        
+        .btn-orange { background: #ff9800; color: #000; border: none; padding: 10px 14px; font-weight: bold; border-radius: 6px; cursor: pointer; font-size: 13px; }
+        .btn-orange:hover { background: #e68900; }
+        .btn-success { background: #5cb85c; color: #fff; border: none; padding: 10px 14px; font-weight: bold; border-radius: 6px; cursor: pointer; font-size: 13px; }
+        .btn-danger { background: #d9534f; color: #fff; border: none; padding: 8px 12px; border-radius: 6px; cursor: pointer; font-size: 12px; font-weight: bold; text-decoration: none; display: inline-block; }
+
+        .solicitud-row { background: #1c1c1e; border: 1px solid #333; padding: 12px; border-radius: 8px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; }
+        
+        table { width: 100%; border-collapse: collapse; margin-top: 5px; }
+        th, td { padding: 8px; text-align: left; border-bottom: 1px solid #222; font-size: 12px; }
+        th { color: #ff9800; background: #1a1a1a; }
+    </style>
+    <style>
+        /* Inversión de funciones y colores del botón Online/Offline */
+        .btn-success, .btn-online, header button:nth-last-child(2) {
+            background-color: #dc3545 !important;
+            border-color: #dc3545 !important;
+        }
+        .btn-danger {
+            background-color: #198754 !important;
+            border-color: #198754 !important;
+        }
+    </style>
+    </head>
+<body>
+    <div class="header">
+        <div class="user-info">Chofer: <strong>{{ chofer.nombre }}</strong> (Placa: <span style="color: #ff9800;">{{ chofer.placa }}</span>)</div>
+        <div style="display: flex; gap: 10px; align-items: center;">
+            <form action="/toggle_online" method="POST" style="margin:0;">
+                <button type="submit" class="btn-orange" style="background: {% if is_online == 1 %}#5cb85c{% else %}#d9534f{% endif %}; color: #fff; padding: 6px 12px; font-size: 12px;">
+        <form action="/toggle_online" method="POST" style="display:inline-block; vertical-align: middle;">
+            {% if is_online == 1 %}
+            <button type="submit" style="background:#28a745; color:white; border:none; padding:8px 18px; border-radius:20px; font-weight:bold; cursor:pointer; font-size: 14px;">🟢 En Línea</button>
+            {% else %}
+            <button type="submit" style="background:#dc3545; color:white; border:none; padding:8px 18px; border-radius:20px; font-weight:bold; cursor:pointer; font-size: 14px;">🔴 Off Line</button>
+            {% endif %}
+        </form>
+                </button>
+            </form>
+            <a href="/login" class="btn-danger" style="padding: 6px 10px; font-size: 12px;">Cerrar Sesión</a>
         </div>
-
-        <!-- CONTENEDOR PRINCIPAL: MAPA GPS EN VIVO Y TABLA -->
-        <div style="display:grid; grid-template-columns: 1fr; gap:20px;">
-            
-            <!-- MAPA LEAFLET GPS (Se activa al aceptar carrera) -->
-            <div style="background:#1e1e1e; padding:15px; border-radius:8px; border:1px solid #333;">
-                <h3 style="color:#2ecc71; margin-top:0; font-size:15px;">Ubicación GPS del Pasajero en Vivo</h3>
-                <div id="mapa-gps-chofer" style="width:100%; height:250px; border-radius:6px; background:#222;"></div>
-            </div>
-
-            <!-- TABLA DE CARRERAS DISPONIBLES Y EN CURSO -->
-            <div style="background:#1e1e1e; padding:20px; border-radius:8px; border:1px solid #333;">
-                <h3 style="color:#2ecc71; margin-top:0; font-size:16px; margin-bottom:15px;">Carreras Disponibles y Mis Viajes en Curso</h3>
-                <table style="width:100%; border-collapse:collapse; text-align:left;">
-                    <thead>
-                        <tr style="border-bottom:1px solid #444; color:#aaa; font-size:12px;">
-                            <th style="padding:10px;">ID</th>
-                            <th style="padding:10px;">Tipo</th>
-                            <th style="padding:10px;">Precio</th>
-                            <th style="padding:10px;">Pasajero</th>
-                            <th style="padding:10px;">Ubicación / Mapa</th>
-                            <th style="padding:10px;">Estado</th>
-                            <th style="padding:10px;">Acción Inmediata</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% if carreras %}
-                            {% for c in carreras %}
-                            <tr style="border-bottom:1px solid #2c2c2c; font-size:13px;">
-                                <td style="padding:10px;">#{{ c.id }}</td>
-                                <td style="padding:10px;">{{ c.tipo }}</td>
-                                <td style="padding:10px; color:#2ecc71; font-weight:bold;">Bs. {{ c.precio | round(2) }}</td>
-                                <td style="padding:10px;">{{ c.pasajero_nombre | default('Maria Gabriela') }}</td>
-                                <td style="padding:10px; color:#aaa; font-size:12px;">Lat/Lng Activa</td>
-                                <td style="padding:10px; color:{% if c.estado == 'Completada' %}#2ecc71{% else %}#f39c12{% endif %};">{{ c.estado }}</td>
-                                <td style="padding:10px;">
-                                    {% if c.estado != 'Completada' and c.estado != 'En Curso' %}
-                                    <form action="/chofer/aceptar/{{ c.id }}" method="POST" style="margin:0;">
-                                        <button type="submit" style="background:#2ecc71; color:#121212; border:none; padding:5px 10px; border-radius:4px; font-weight:bold; font-size:11px; cursor:pointer;">Aceptar</button>
-                                    </form>
-                                    {% else %}
-                                    <span style="color:#888; font-size:11px;">{{ c.estado }}</span>
-                                    {% endif %}
-                                </td>
-                            </tr>
-                            {% endfor %}
-                        {% else %}
-                            <!-- FILAS DE EJEMPLO ESTÉTICAS IDÉNTICAS A TU CAPTURA -->
-                            <tr style="border-bottom:1px solid #2c2c2c; font-size:13px;">
-                                <td style="padding:10px;">#5</td>
-                                <td style="padding:10px;">Moto-Taxi Standard</td>
-                                <td style="padding:10px; color:#2ecc71; font-weight:bold;">Bs. 800.0</td>
-                                <td style="padding:10px;">Maria Gabriela</td>
-                                <td style="padding:10px; color:#aaa; font-size:12px;">San Juan de los Morros</td>
-                                <td style="padding:10px; color:#2ecc71;">Completada</td>
-                                <td style="padding:10px; color:#2ecc71;">Completada</td>
-                            </tr>
-                        {% endif %}
-                    </tbody>
-                </table>
-            </div>
-
-        </div>
-
     </div>
 
-    <!-- Leaflet JS -->
-    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-    <script>
-        // Inicializar mapa Leaflet centrado en San Juan de los Morros
-        var map = L.map('mapa-gps-chofer').setView([9.9142, -67.3536], 14);
-        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-            maxZoom: 19,
-            attribution: '© OpenStreetMap'
-        }).addTo(map);
+    <div class="metrics-grid">
+        <div class="metric-card">
+            <div class="metric-label">💳 Mis Créditos</div>
+            <div class="metric-val" id="lbl-creditos" style="color: {% if creditos < 144 %}#d9534f{% else %}#5cb85c{% endif %};">Bs. {{ "%.2f"|format(creditos) }}</div>
+        </div>
+        <div class="metric-card">
+            <div class="metric-label">💵 Total Ganado</div>
+            <div class="metric-val">Bs. {{ "%.2f"|format(total_ganado) }}</div>
+        </div>
+        <div class="metric-card">
+            <div class="metric-label">🤝 Padrino Ref.</div>
+            <div class="metric-val" style="color: #5bc0de;">Bs. {{ "%.2f"|format(ganancias_padrino_referidos) }}</div>
+        </div>
+        <div class="metric-card">
+            <div class="metric-label">⭐ Rating</div>
+            <div class="metric-val" style="color: #ffc107;">★ {{ promedio_rating }}</div>
+        </div>
+    </div>
 
-        // Marcador simulado de la ubicación del pasajero al aceptar
-        var markerPasajero = L.marker([9.9142, -67.3536]).addTo(map)
-            .bindPopup("<b>Ubicación del Pasajero</b><br>Esperando al chofer.")
-            .openPopup();
-    </script>
-</body>
+    <!-- SOLICITUDES ACTIVAS EN TIEMPO REAL -->
+    <div class="card">
+        <div class="card-title">
+            <span>📡 Solicitudes en la Red (GPS Exacto)</span>
+            <span style="font-size: 11px; color: #888; font-weight: normal;" id="status-sync">🔄 Sincronizando...</span>
+        </div>
+        <div id="contenedor-solicitudes">
+            {% if activas %}
+                {% for s in activas %}
+                    <div class="solicitud-row" id="sol-{{ s.id }}">
+                        <div>
+                            <div style="font-weight: bold; font-size: 14px; color: #fff;">Pasajero: {{ s.pasajero }}</div>
+                            <div style="font-size: 12px; color: #aaa; margin-top: 3px;">📍 {{ s.origen }}</div>
+                            <div style="font-size: 11px; color: #5bc0de; margin-top: 2px;">
+                                🎯 <strong>GPS Exacto:</strong> Lat: {{ s.lat }}, Lng: {{ s.lng }} 
+                                <a href="https://www.google.com/maps?q={{ s.lat }},{{ s.lng }}" target="_blank" style="color: #ff9800; text-decoration: underline; margin-left: 6px;">🗺️ Abrir en Mapa</a>
+                            </div>
+                            <div style="font-size: 12px; color: #ff9800; margin-top: 3px;">Tarifa: Bs. {{ "%.2f"|format(s.monto) }} | Comisión: Bs. {{ "%.2f"|format(s.comision_total) }}</div>
+                        </div>
+                        <div style="display: flex; gap: 8px; align-items: center;">
+                            {% if s.estado == 'pendiente' %}
+                                <form action="/aprobar_viaje/{{ s.id }}" method="POST" style="margin:0;">
+                                    <button type="submit" class="btn-success">Aprobar Carrera</button>
+                                </form>
+                            {% elif s.estado == 'aprobado' %}
+                                <form action="/finalizar_viaje/{{ s.id }}" method="POST" style="margin:0;">
+                                    <button type="submit" class="btn-orange" style="background: #f0ad4e; color: #000;">Finalizar Viaje</button>
+                                </form>
+                            {% endif %}
+                            <form action="/cancelar_viaje/{{ s.id }}" method="POST" style="margin:0;">
+                                <button type="submit" class="btn-danger" style="padding: 10px;">X</button>
+                            </form>
+                        </div>
+                    </div>
+                {% endfor %}
+            {% else %}
+                <p id="no-solicitudes" style="color: #666; font-size: 13px; text-align: center; margin: 5px 0;">No hay solicitudes activas en este momento. Esperando pasajeros...</p>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- HISTORIAL DE CARRERAS -->
+    <div class="card">
+        <h3 class="card-title">📜 Historial de Carreras Finalizadas</h3>
+        <table>
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Pasajero</th>
+                    <th>Origen</th>
+                    <th>Monto Net</th>
+                    <th>Calificación</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for h in historial %}
+                    <tr>
+                        <td>#{{ h.id }}</td>
+                        <td>{{ h.pasajero }}</td>
+                        <td>{{ h.origen }}</td>
+                        <td style="color: #5cb85c; font-weight: bold;">Bs. {{ "%.2f"|format(h.ganancia_neta) }}</td>
+                        <td>{% if h.calificacion > 0 %}⭐ {{ h.calificacion }}{% else %}Sin calificar{% endif %}</td>
+                    </tr>
+                {% else %}
+                    <tr><td colspan="5" style="text-align: center; color: #666;">Aún no tienes carreras finalizadas.</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    
+
+
+
+
+
+<!-- Forzar Botón Verde En Línea Activo -->
+<script>
+    document.addEventListener("DOMContentLoaded", function() {
+        const buttons = document.querySelectorAll("header button, .container-fluid button, .d-flex button");
+        buttons.forEach(btn => {
+            const text = btn.textContent.trim();
+            // Si el botón es el de estatus (no es cerrar sesión), lo dejamos en verde "En Línea" por defecto
+            if ((text.includes("Offline") || text.includes("Desconectado") || text.includes("En Línea") || text.includes("Online")) && !text.includes("Cerrar")) {
+                btn.textContent = "🟢 En Línea";
+                btn.className = "btn btn-success btn-sm px-3 shadow-sm";
+                
+                // Hacemos que al hacerle clic alterne de forma limpia
+                let activo = true;
+                btn.onclick = function(e) {
+                    e.preventDefault();
+                    activo = !activo;
+                    if (activo) {
+                        btn.textContent = "🟢 En Línea";
+                        btn.className = "btn btn-success btn-sm px-3 shadow-sm";
+                    } else {
+                        btn.textContent = "🔴 Offline";
+                        btn.className = "btn btn-danger btn-sm px-3 shadow-sm";
+                    }
+                };
+            }
+        });
+    });
+</script>
+
+
+<!-- Actualizacion en tiempo real -->
+<script>
+    setInterval(async function() {
+        if (document.hidden) return; // Pausa si la pestaña no está activa para ahorrar recursos
+        try {
+            const response = await fetch(window.location.href);
+            const html = await response.text();
+            const parser = new DOMParser();
+            const doc = parser.parseFromString(html, 'text/html');
+            
+            // Buscamos la sección de solicitudes tanto en la página actual como en la nueva respuesta
+            let targetSection = document.getElementById("seccion-solicitudes");
+            let newSection = doc.getElementById("seccion-solicitudes");
+            
+            if (!targetSection) {
+                // Alternativa por si el ID no se inyectó, buscamos por texto
+                const headers = Array.from(document.querySelectorAll("div, h4, h5, span"));
+                const found = headers.find(h => h.textContent.includes("Solicitudes en la Red (GPS Exacto)"));
+                if (found) targetSection = found.closest("div");
+            }
+            
+            if (!newSection) {
+                const headersNew = Array.from(doc.querySelectorAll("div, h4, h5, span"));
+                const foundNew = headersNew.find(h => h.textContent.includes("Solicitudes en la Red (GPS Exacto)"));
+                if (foundNew) newSection = foundNew.closest("div");
+            }
+            
+            if (targetSection && newSection) {
+                // Si el contenido interno cambió (alguien aceptó la carrera y se vació o cambió), actualizamos al instante
+                if (targetSection.innerHTML.trim() !== newSection.innerHTML.trim()) {
+                    targetSection.innerHTML = newSection.innerHTML;
+                }
+            }
+        } catch (e) {
+            // Silenciamos errores de red temporales
+        }
+    }, 2000); // Refresco ultra rápido cada 2 segundos
+</script>
+<script>let lastSt=null; setInterval(()=>{fetch('/api/actualizaciones_chofer').then(r=>r.json()).then(d=>{let currSt=d.solicitudes.map(s=>s.id+s.estado).join(','); if(lastSt!==null && currSt!==lastSt){window.location.reload();} lastSt=currSt;});}, 2500);</script>{% if activas %}<div style='position:fixed; bottom:20px; right:20px; background:#FFD700; color:#000; padding:20px; border-radius:15px; z-index:9999; box-shadow:0 4px 10px rgba(0,0,0,0.5); border: 2px solid #000;'><h3 style='margin-top:0;'>🚕 Viaje en Curso</h3><p><b>Pasajero:</b> {{ activas[0].pasajero }}</p><p><b>A Cobrar:</b> Bs. {{ activas[0].monto }}</p><form action='/finalizar_viaje/{{ activas[0].id }}' method='POST'><button type='submit' style='background:#000; color:#FFD700; padding:10px 20px; border:none; border-radius:10px; font-weight:bold; cursor:pointer; width:100%;'>✅ Marcar como Finalizado y Pagado</button></form></div>{% endif %}</body>
 </html>
+
+
+
+
+
+
+
+
+
+
+
+
+
+

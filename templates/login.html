@@ -2,16 +2,111 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Acceso Operativo - Martillos & Ruedas</title>
+    <style>
+        * { box-sizing: border-box; }
+        body { 
+            background-color: #0b0b0b; 
+            color: #fff; 
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+            display: flex; 
+            justify-content: center; 
+            align-items: center; 
+            height: 100vh; 
+            margin: 0; 
+        }
+
+        /* TARJETA CENTRAL MINIMALISTA */
+        .login-card { 
+            background: #141414; 
+            border: 1px solid #262626; 
+            padding: 35px 30px; 
+            border-radius: 14px; 
+            width: 360px; 
+            text-align: center; 
+            box-shadow: 0 10px 30px rgba(0,0,0,0.8); 
+        }
+
+        .login-title { 
+            color: #ff9800; 
+            font-weight: bold; 
+            font-size: 16px; 
+            margin-bottom: 6px; 
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .login-subtitle {
+            color: #888;
+            font-size: 12px;
+            margin-bottom: 22px;
+        }
+
+        /* CAMPO DE PIN / CONTRASEÑA */
+        input[type="password"], input[type="text"] { 
+            width: 100%; 
+            padding: 12px 15px; 
+            background: #eaeef6; 
+            color: #111; 
+            border: none; 
+            border-radius: 8px; 
+            font-size: 16px; 
+            margin-bottom: 18px; 
+            text-align: center; 
+            letter-spacing: 4px;
+            font-weight: bold;
+            outline: none;
+        }
+
+        /* BOTÓN NARANJA PRINCIPAL */
+        .btn-system { 
+            width: 100%; 
+            background: #ff9800; 
+            color: #000; 
+            border: none; 
+            padding: 12px; 
+            font-weight: bold; 
+            border-radius: 8px; 
+            cursor: pointer; 
+            font-size: 14px; 
+            transition: 0.2s;
+        }
+        .btn-system:hover { background: #e68900; }
+
+        .error { color: #ff6b6b; font-size: 12px; margin-bottom: 15px; font-weight: bold; }
+        
+        .passenger-link {
+            display: block;
+            margin-top: 18px;
+            color: #aaa;
+            font-size: 12px;
+            text-decoration: none;
+        }
+        .passenger-link:hover { color: #ff9800; text-decoration: underline; }
+    </style>
 </head>
-<body style="background:#121212; color:#fff; font-family:sans-serif; display:flex; justify-content:center; align-items:center; height:100vh; margin:0;">
-    <div style="background:#1e1e1e; padding:35px; border-radius:10px; border:1px solid #333; width:350px; text-align:center;">
-        <h3 style="color:#f39c12; margin-top:0;">🔒 Personal Operativo</h3>
-        <p style="font-size:12px; color:#aaa; margin-bottom:20px;">PIN de Chofer o Administrador</p>
-        <form action="/login" method="POST">
-            <input type="password" name="pin" placeholder="Ingresa tu PIN" maxlength="6" required style="width:100%; padding:12px; margin-bottom:15px; background:#2c2c2c; border:1px solid #444; color:#fff; border-radius:5px; box-sizing:border-box; text-align:center; font-size:16px;">
-            <button type="submit" style="width:100%; padding:12px; background:#f39c12; border:none; color:#000; font-weight:bold; border-radius:5px; cursor:pointer; font-size:15px;">Entrar al Sistema</button>
+<body>
+    <div class="login-card">
+        <div class="login-title">🔒 Personal Operativo</div>
+        <div class="login-subtitle">PIN de Chofer o Administrador</div>
+
+        {% with messages = get_flashed_messages(with_categories=true) %}
+          {% if messages %}
+            {% for cat, msg in messages %}
+              <div class="error">{{ msg }}</div>
+            {% endfor %}
+          {% endif %}
+        {% endwith %}
+
+        <form method="POST">
+            <input type="password" name="pin" placeholder="••••••" required autofocus autocomplete="off">
+            <button type="submit" class="btn-system">Entrar al Sistema</button>
         </form>
+
+        <a href="/login_pasajero" class="passenger-link">← Volver al Acceso de Pasajeros</a>
     </div>
 </body>
 </html>

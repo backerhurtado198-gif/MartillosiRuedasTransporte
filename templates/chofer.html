@@ -2,39 +2,40 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Panel de Chofer - Martillos & Ruedas</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <title>Panel del Chofer - Martillos & Ruedas</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
-<body class="bg-light">
-    <div class="container mt-4" style="max-width: 600px;">
-        <h2 class="text-center mb-4 text-success">🏍️ Panel del Chofer</h2>
+<body class="dark-theme">
+    <div class="container">
+        <h2>Panel Operativo - Chofer</h2>
         
-        {% if carreras %}
-            {% for carrera in carreras %}
-            <div class="card shadow-sm mb-3">
-                <div class="card-body">
-                    <h5 class="card-title text-dark">Nueva Solicitud</h5>
-                    <p class="mb-1"><strong>Destino:</strong> {{ carrera.destino }}</p>
-                    {% if carrera.referencia %}
-                        <p class="mb-2"><strong>Referencia:</strong> {{ carrera.referencia }}</p>
-                    {% endif %}
-
-                    {% if carrera.lat_origen and carrera.lng_origen %}
-                        <a href="https://www.google.com/maps/dir/?api=1&destination={{ carrera.lat_origen }},{{ carrera.lng_origen }}" 
-                           target="_blank" 
-                           class="btn btn-info w-100 mb-2 text-white fw-bold">
-                           🗺️ Ver ubicación exacta del pasajero en GPS
-                        </a>
-                    {% endif %}
-
-                    <a href="/aceptar_carrera/{{ carrera.id }}" class="btn btn-success w-100">Aceptar Carrera</a>
-                </div>
+        {% if carrera_activa %}
+            <div class="card active-ride">
+                <h3>🚗 Tienes una carrera en curso</h3>
+                <p><strong>Destino:</strong> {{ carrera_activa.destino }}</p>
+                <p><strong>Pasajero:</strong> {{ carrera_activa.pasajero }}</p>
+                
+                <form action="{{ url_for('finalizar_carrera', id=carrera_activa.id) }}" method="POST">
+                    <button type="submit" class="btn-rojo">Finalizar Carrera</button>
+                </form>
             </div>
-            {% endfor %}
         {% else %}
-            <div class="alert alert-info text-center" role="alert">
-                No hay solicitudes pendientes en este momento.
+            <div class="card ride-queue">
+                <h3>📋 Cola de Carreras Disponibles</h3>
+                {% if carreras %}
+                    <ul class="lista-carreras">
+                        {% for c in carreras %}
+                            <li class="item-carrera">
+                                <span><strong>Destino:</strong> {{ c.destino }}</span>
+                                <form action="{{ url_for('aceptar_carrera', id=c.id) }}" method="POST">
+                                    <button type="submit" class="btn-verde">Aceptar Carrera</button>
+                                </form>
+                            </li>
+                        {% endfor %}
+                    </ul>
+                {% else %}
+                    <p>No hay carreras pendientes en la cola en este momento.</p>
+                {% endif %}
             </div>
         {% endif %}
     </div>

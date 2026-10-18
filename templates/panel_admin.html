@@ -1,0 +1,281 @@
+﻿<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Panel Admin - Martillos & Ruedas</title>
+    <style>
+        * { box-sizing: border-box; }
+        body { background-color: #0b0b0b; color: #fff; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 0; padding: 20px; }
+        .header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #222; padding-bottom: 15px; margin-bottom: 20px; flex-wrap: wrap; gap: 15px; }
+        .top-tools { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; background: #141414; border: 1px solid #262626; padding: 10px 15px; border-radius: 10px; }
+        .top-tools form { display: flex; align-items: center; gap: 6px; margin: 0; }
+        .top-tools input { margin-bottom: 0 !important; width: 110px !important; padding: 6px 10px !important; text-align: center; }
+
+        .grid-metrics { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-bottom: 20px; }
+        .metric-card { background: #141414; border: 1px solid #262626; border-radius: 12px; padding: 15px; text-align: center; }
+        .metric-label { font-size: 11px; color: #888; text-transform: uppercase; margin-bottom: 6px; }
+        .metric-val { font-size: 22px; font-weight: bold; color: #ff9800; }
+
+        .card { background: #141414; border: 1px solid #262626; border-radius: 12px; padding: 20px; margin-bottom: 20px; }
+        .btn-orange { background: #ff9800; color: #000; border: none; padding: 8px 14px; font-weight: bold; border-radius: 6px; cursor: pointer; font-size: 13px; }
+        .btn-success { background: #5cb85c; color: #fff; border: none; padding: 8px 14px; font-weight: bold; border-radius: 6px; cursor: pointer; font-size: 13px; }
+        .btn-danger { background: #d9534f; color: #fff; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer; font-size: 12px; }
+        .btn-warning { background: #f0ad4e; color: #000; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer; font-size: 12px; font-weight: bold; }
+        .btn-logout { background: #d9534f; color: #fff; border: none; padding: 8px 14px; border-radius: 6px; cursor: pointer; text-decoration: none; font-size: 13px; font-weight: bold; }
+        
+        input, select { width: 100%; padding: 10px; background: #1c1c1e; color: #fff; border: 1px solid #333; border-radius: 6px; margin-bottom: 12px; }
+        table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+        th, td { padding: 10px; text-align: left; border-bottom: 1px solid #222; font-size: 13px; }
+        th { color: #ff9800; background: #1a1a1a; }
+        .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+        @media (max-width: 768px) { .grid-2 { grid-template-columns: 1fr; } }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h2 style="color: #ff9800; margin: 0;">⚙️ Panel General de Administración</h2>
+        <div class="top-tools">
+            <form action="/panel_admin" method="POST">
+                <input type="hidden" name="accion" value="actualizar_tarifa">
+                <span style="font-size: 12px; color: #aaa;">Tarifa:</span>
+                <input type="number" name="tarifa_global" value="{{ config.tarifa }}" required>
+                <button type="submit" class="btn-orange">Actualizar</button>
+            </form>
+            <div style="width: 1px; height: 25px; background: #333;"></div>
+            <form action="/panel_admin" method="POST">
+                <input type="hidden" name="accion" value="cambiar_pin">
+                <span style="font-size: 12px; color: #aaa;">PIN Admin:</span>
+                <input type="password" name="nuevo_pin" placeholder="PIN" required>
+                <button type="submit" class="btn-orange">Cambiar</button>
+            </form>
+            <a href="/login" class="btn-logout">Cerrar Sesión</a>
+        </div>
+    </div>
+
+    <!-- MÉTRICAS FINANCIERAS -->
+    <div class="grid-metrics">
+        <div class="metric-card">
+            <div class="metric-label">💵 Ganancia Administración (15%)</div>
+            <div class="metric-val" style="color: #5cb85c;">Bs. {{ "%.2f"|format(total_recaudado_admin) }}</div>
+        </div>
+        <div class="metric-card">
+            <div class="metric-label">🤝 Repartido a Padrinos (3%)</div>
+            <div class="metric-val" style="color: #5bc0de;">Bs. {{ "%.2f"|format(total_recaudado_padrinos) }}</div>
+        </div>
+        <div class="metric-card">
+            <div class="metric-label">🛵 Movido en la Red</div>
+            <div class="metric-val">Bs. {{ "%.2f"|format(volumen_total_movido) }}</div>
+        </div>
+        <div class="metric-card">
+            <div class="metric-label">💳 Créditos en Circulación</div>
+            <div class="metric-val" style="color: #ffc107;">Bs. {{ "%.2f"|format(total_creditos_circulacion) }}</div>
+        </div>
+    </div>
+
+    <!-- MULTIMEDIA & PUBLICIDAD -->
+    <div class="grid-2">
+        <div class="card">
+            <h3 style="color: #ff9800; margin-top: 0;">🖼️ Banner Institucional (Pasajero)</h3>
+            <form action="/panel_admin" method="POST" enctype="multipart/form-data">
+                <input type="hidden" name="accion" value="subir_banner">
+                <input type="file" name="banner_img" accept="image/*,video/*" required>
+                <button type="submit" class="btn-orange" style="width: 100%;">Subir / Cambiar Banner</button>
+            </form>
+            {% if config.banner %}
+                <div style="margin-top: 12px;"><img src="{{ config.banner }}" style="width: 100%; height: 90px; border-radius: 6px; border: 1px solid #333; object-fit: cover;"></div>
+            {% endif %}
+        </div>
+
+        <div class="card">
+            <h3 style="color: #ffc107; margin-top: 0;">🎬 Video Splash Screen (Inicio)</h3>
+            <form action="/panel_admin" method="POST" enctype="multipart/form-data">
+                <input type="hidden" name="accion" value="subir_splash">
+                <input type="file" name="splash_video_file" accept="video/*" required>
+                <button type="submit" class="btn-success" style="width: 100%;">Subir / Cambiar Splash Video</button>
+            </form>
+            {% if config.splash_video %}
+                <div style="margin-top: 12px;"><video src="{{ config.splash_video }}" autoplay muted loop style="width: 100%; height: 90px; border-radius: 6px; border: 1px solid #333; object-fit: cover;"></video></div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- GESTIÓN DE CHOFERES, SALDOS Y GANANCIAS -->
+    <div class="grid-2">
+        <div class="card">
+            <h3 style="color: #ff9800; margin-top: 0;">🛵 Gestión y Créditos de Choferes</h3>
+            <form action="/panel_admin" method="POST" style="background: #1c1c1e; padding: 12px; border-radius: 8px; margin-bottom: 12px;">
+                <input type="hidden" name="accion" value="recargar_saldo">
+                <label style="font-size: 11px; color: #aaa;">Recargar Saldo a Chofer:</label>
+                <select name="chofer_id" required>
+                    {% for c in choferes %}
+                        <option value="{{ c.id }}">{{ c.nombre }} (Saldo: Bs. {{ c.creditos }})</option>
+                    {% endfor %}
+                </select>
+                <input type="number" name="monto_recarga" placeholder="Monto a recargar (Ej: 500)" required>
+                <button type="submit" class="btn-success" style="width: 100%;">Recargar Créditos</button>
+            </form>
+
+            <table>
+                <thead>
+                    <tr><th>Chofer / PIN</th><th>Moto / Placa</th><th>Dinero Ganado</th><th>Créditos</th><th>Acciones</th></tr>
+                </thead>
+                <tbody>
+                    {% for c in choferes %}
+                        <tr>
+                            <td>
+                                <strong>{{ c.nombre }}</strong><br>
+                                <span style="font-size: 11px; color: #888;">{{ c.telefono }}</span><br>
+                                <span style="font-size: 11px; color: #ff9800;">PIN: <strong>{{ c.pin }}</strong></span>
+                                <form action="/panel_admin" method="POST" style="display: flex; gap: 4px; margin-top: 4px;">
+                                    <input type="hidden" name="accion" value="cambiar_pin_chofer">
+                                    <input type="hidden" name="chofer_id" value="{{ c.id }}">
+                                    <input type="text" name="nuevo_pin_chofer" placeholder="Nuevo PIN" required style="width: 80px; margin-bottom: 0; padding: 4px; font-size: 11px;">
+                                    <button type="submit" class="btn-orange" style="padding: 4px 8px; font-size: 11px;">Cambiar PIN</button>
+                                </form>
+                            </td>
+                            <td>{{ c.modelo_moto }}<br><span style="color: #ff9800; font-weight: bold;">{{ c.placa_moto }}</span><br><span style="font-size: 11px; color: #5bc0de;">Padrino: {{ c.padrino }}</span></td>
+                            <td style="color: #5cb85c; font-weight: bold;">Bs. {{ "%.2f"|format(c.ganancia_acumulada) }}</td>
+                            <td style="color: #ffc107; font-weight: bold;">Bs. {{ "%.2f"|format(c.creditos) }}</td>
+                            <td>
+                                <form action="/panel_admin" method="POST" style="display:inline;" onsubmit="return confirm('¿Liquidar ganancias de Bs. {{ "%.2f"|format(c.ganancia_acumulada) }} de este chofer?');">
+                                    <input type="hidden" name="accion" value="liquidar_ganancias">
+                                    <input type="hidden" name="chofer_id" value="{{ c.id }}">
+                                    <button type="submit" class="btn-warning" title="Liquidar Ganancias">Liquidar</button>
+                                </form>
+                                <form action="/panel_admin" method="POST" style="display:inline;" onsubmit="return confirm('¿Eliminar chofer?');">
+                                    <input type="hidden" name="accion" value="eliminar_chofer">
+                                    <input type="hidden" name="chofer_id" value="{{ c.id }}">
+                                    <button type="submit" class="btn-danger">X</button>
+                                </form>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <div class="card">
+            <h3 style="color: #ff9800; margin-top: 0;">👥 Registro de Nuevo Chofer</h3>
+            <form action="/panel_admin" method="POST">
+                <input type="hidden" name="accion" value="registrar_chofer">
+                <input type="text" name="nombre" placeholder="Nombre y Apellido" required>
+                <input type="text" name="telefono" placeholder="Teléfono (Ej: 0412-1234567)" required>
+                <input type="text" name="modelo_moto" placeholder="Modelo de Moto (Ej: Bera SBR)" required>
+                <input type="text" name="color_moto" placeholder="Color de Moto" required>
+                <input type="text" name="placa_moto" placeholder="Placa (Ej: AB1C23)" required>
+                
+                <!-- SELECTOR DE PADRINO CARGADO CON LA LISTA DE CHOFERES -->
+                <select name="padrino">
+                    <option value="Sin Padrino">-- Seleccionar Padrino (Opcional) --</option>
+                    {% for c in choferes %}
+                        <option value="{{ c.nombre }}">{{ c.nombre }} (Placa: {{ c.placa_moto }})</option>
+                    {% endfor %}
+                </select>
+
+                <input type="password" name="pin" placeholder="PIN de Acceso (4 dígitos)" required>
+                <input type="number" name="creditos" placeholder="Créditos Iniciales (Ej: 500)" required>
+                <button type="submit" class="btn-orange" style="width: 100%;">Registrar Chofer</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- PASAJEROS Y PUNTOS PATROCINADOS -->
+    <div class="grid-2">
+        <div class="card">
+            <h3 style="color: #ff9800; margin-top: 0;">👤 Pasajeros Registrados</h3>
+            <form action="/panel_admin" method="POST" style="background: #1c1c1e; padding: 12px; border-radius: 8px; margin-bottom: 12px;">
+                <input type="hidden" name="accion" value="registrar_pasajero">
+                <input type="text" name="nombre" placeholder="Nombre completo" required style="margin-bottom:8px;">
+                <input type="text" name="cedula" placeholder="Cédula de Identidad" required style="margin-bottom:8px;">
+                <input type="text" name="telefono" placeholder="Teléfono" required style="margin-bottom:8px;">
+                <input type="text" name="usuario" placeholder="Usuario app" required style="margin-bottom:8px;">
+                <input type="password" name="pin" placeholder="PIN" required style="margin-bottom:8px;">
+                <button type="submit" class="btn-success" style="width: 100%;">Registrar Pasajero</button>
+            </form>
+            <table>
+                <thead><tr><th>Nombre</th><th>Usuario / Cédula</th><th>Acciones</th></tr></thead>
+                <tbody>
+                    {% for p in lista_pasajeros %}
+                        <tr>
+                            <td>{{ p.nombre }}<br><span style="font-size:11px; color:#888;">{{ p.telefono }}</span></td>
+                            <td>{{ p.usuario }}<br><span style="font-size:11px; color:#ff9800;">CI: {{ p.cedula }}</span></td>
+                            <td>
+                                <form action="/panel_admin" method="POST" onsubmit="return confirm('¿Eliminar pasajero?');">
+                                    <input type="hidden" name="accion" value="eliminar_pasajero">
+                                    <input type="hidden" name="pasajero_id" value="{{ p.id }}">
+                                    <button type="submit" class="btn-danger">Eliminar</button>
+                                </form>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <div class="card">
+            <h3 style="color: #ff9800; margin-top: 0;">📍 Puntos de Interés / Patrocinados</h3>
+            <form action="/panel_admin" method="POST" style="background: #1c1c1e; padding: 12px; border-radius: 8px; margin-bottom: 12px;">
+                <input type="hidden" name="accion" value="agregar_punto">
+                <input type="text" name="nombre_comercio" placeholder="Nombre del Comercio" required style="margin-bottom:8px;">
+                <input type="text" name="categoria" placeholder="Categoría (Ej: Supermercado)" required style="margin-bottom:8px;">
+                <div style="display: flex; gap: 8px; margin-bottom:8px;">
+                    <input type="number" step="any" name="lat" placeholder="Latitud" value="9.9048" required>
+                    <input type="number" step="any" name="lng" placeholder="Longitud" value="-67.3537" required>
+                </div>
+                <label style="font-size: 12px; color: #aaa; display:block; margin-bottom:8px;">
+                    <input type="checkbox" name="es_patrocinado" value="1" checked> Comercio Patrocinado Destacado
+                </label>
+                <button type="submit" class="btn-orange" style="width: 100%;">Agregar Punto</button>
+            </form>
+            <table>
+                <thead><tr><th>Comercio</th><th>Categoría</th><th>Acción</th></tr></thead>
+                <tbody>
+                    {% for pt in puntos %}
+                        <tr>
+                            <td>{{ pt.nombre }}</td>
+                            <td>{{ pt.categoria }} {% if pt.es_patrocinado == 1 %}⭐{% endif %}</td>
+                            <td>
+                                <form action="/eliminar_punto/{{ pt.id }}" method="POST">
+                                    <button type="submit" class="btn-danger">X</button>
+                                </form>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- HISTORIAL DE CARRERAS GLOBAL -->
+    <div class="card">
+        <h3 style="color: #ff9800; margin-top: 0;">🌐 Historial Global de Carreras (Red)</h3>
+        <table>
+            <thead>
+                <tr><th>ID</th><th>Pasajero</th><th>Origen</th><th>Estado</th><th>Monto</th><th>Comisión Admin</th><th>Padrino</th><th>Rating</th></tr>
+            </thead>
+            <tbody>
+                {% for cg in carreras_globales %}
+                    <tr>
+                        <td>#{{ cg.id }}</td>
+                        <td>{{ cg.pasajero }}</td>
+                        <td>{{ cg.origen }}</td>
+                        <td>
+                            {% if cg.estado == 'finalizado' %}<span style="color: #5cb85c; font-weight: bold;">Finalizado</span>
+                            {% elif cg.estado == 'aprobado' %}<span style="color: #f0ad4e; font-weight: bold;">En Curso</span>
+                            {% elif cg.estado == 'pendiente' %}<span style="color: #ff9800; font-weight: bold;">Pendiente</span>
+                            {% else %}<span style="color: #d9534f;">Cancelado</span>{% endif %}
+                        </td>
+                        <td>Bs. {{ "%.2f"|format(cg.monto) }}</td>
+                        <td style="color: #5cb85c;">Bs. {{ "%.2f"|format(cg.comision_admin) }}</td>
+                        <td style="color: #5bc0de;">Bs. {{ "%.2f"|format(cg.pago_padrino) }}</td>
+                        <td>{% if cg.rating > 0 %}⭐ {{ cg.rating }}{% else %}-{% endif %}</td>
+                    </tr>
+                {% else %}
+                    <tr><td colspan="8" style="text-align: center; color: #666;">No hay carreras registradas aún.</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</body>
+</html>
